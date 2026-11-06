@@ -1,0 +1,13 @@
+# segredos
+.env
+
+# dados locais (regeneráveis: fetch.py → consolidate.py → fetch_profiles.py;
+# triage_cache.json vem da API da Jev) — não versionar dados de pessoas
+data/
+saida/
+
+# lixo de sistema/python
+__pycache__/
+*.pyc
+.DS_Store
+.venv/

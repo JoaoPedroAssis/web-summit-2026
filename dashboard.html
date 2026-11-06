@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Web Summit Lisboa 2026 — Programação</title>
+<style>
+  :root {
+    --bg: #fafaf9; --card: #ffffff; --ink: #1c1917; --ink-2: #57534e;
+    --grid: #e7e5e4; --bar: #64748b; --accent: #0f766e; --warn: #b45309;
+    --heat-empty: #f1f5f9;
+    --heat-1: #cfe8e5; --heat-2: #9ad4cf; --heat-3: #5bb8b1; --heat-4: #2d8f88; --heat-5: #14655f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141210; --card: #1e1b19; --ink: #ece9e6; --ink-2: #a8a29e;
+      --grid: #33302d; --bar: #94a3b8; --accent: #5eead4; --warn: #fbbf24;
+      --heat-empty: #26231f;
+      --heat-1: #1d3d3a; --heat-2: #265a55; --heat-3: #2f7a72; --heat-4: #3d9c93; --heat-5: #6cc7bd;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif;
+    padding: 32px 20px 60px;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color: var(--ink-2); font-size: 13px; margin-bottom: 28px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .tile { background: var(--card); border: 1px solid var(--grid); border-radius: 10px; padding: 14px 16px; }
+  .tile .v { font-size: 26px; font-weight: 650; letter-spacing: -0.5px; }
+  .tile .l { color: var(--ink-2); font-size: 12.5px; margin-top: 2px; }
+  .card { background: var(--card); border: 1px solid var(--grid); border-radius: 10px; padding: 18px 20px; margin-bottom: 16px; }
+  .card h2 { font-size: 14px; font-weight: 600; margin: 0 0 2px; }
+  .card .note { color: var(--ink-2); font-size: 12.5px; margin: 0 0 12px; }
+  svg { display: block; width: 100%; height: auto; }
+  svg text { fill: var(--ink-2); font-size: 11px; }
+  svg .val { fill: var(--ink); font-weight: 600; }
+  .legend { display: flex; gap: 16px; font-size: 12px; color: var(--ink-2); margin-top: 8px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+  .warn { color: var(--warn); font-size: 12.5px; margin-top: 10px; }
+  .foot { color: var(--ink-2); font-size: 12px; margin-top: 24px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Web Summit Lisboa 2026 — programação coletada</h1>
+  <div class="sub">Coleta de 27/10/2026 via API pública · dias 9–12/11 · agenda ainda em atualização pelo evento</div>
+
+  <div class="tiles" id="tiles"></div>
+
+  <div class="card">
+    <h2>Sessões por dia</h2>
+    <p class="note">Dias 10 e 11 bateram o teto de 32 páginas da API e foram completados por subdivisão por trilha (verificação: todas as partições ≤ 32 páginas e cobrem tudo que a varredura sem filtro vê).</p>
+    <div id="by-day"></div>
+  </div>
+
+  <div class="card">
+    <h2>Sessões por trilha</h2>
+    <p class="note">12 maiores trilhas. Meetup destacado — é a trilha de encontros livres, central para networking.</p>
+    <div id="by-track"></div>
+  </div>
+
+  <div class="card">
+    <h2>Densidade por horário</h2>
+    <p class="note">Número de sessões por hora de início (hora local de Lisboa). Útil para spotting de conflitos de agenda.</p>
+    <div id="heat"></div>
+  </div>
+
+  <div class="card">
+    <h2>Top palcos por nº de sessões</h2>
+    <p class="note">10 locais com mais sessões na amostra.</p>
+    <div id="by-stage"></div>
+  </div>
+
+  <div class="card">
+    <h2>Empresas com mais speakers presentes</h2>
+    <p class="note">Top 12 por nº de speakers distintos (qualquer sessão). Sinal de onde há densidade de decisão-pegada.</p>
+    <div id="by-company"></div>
+  </div>
+
+  <div class="foot">
+    Fonte: websummit.com/api/list-items (endpoints públicos) · dados crus em <code>data/raw/schedule/</code> ·
+    agregados em <code>data/analysis.json</code>. Uso pessoal de networking — não redistribuir.
+  </div>
+</div>
+
+<script>
+const DATA = {
+ "per_day": {
+  "2026-11-09": {
+   "sessions": 2,
+   "speaker_participations": 0,
+   "unique_speakers": 0
+  },
+  "2026-11-10": {
+   "sessions": 241,
+   "speaker_participations": 361,
+   "unique_speakers": 338
+  },
+  "2026-11-11": {
+   "sessions": 259,
+   "speaker_participations": 376,
+   "unique_speakers": 351
+  },
+  "2026-11-12": {
+   "sessions": 196,
+   "speaker_participations": 276,
+   "unique_speakers": 256
+  }
+ },
+ "nb_pages": {
+  "2026-11-09": 1,
+  "2026-11-10": 35,
+  "2026-11-11": 38,
+  "2026-11-12": 28
+ },
+ "max_pages": 32,
+ "truncated": {
+  "2026-11-09": false,
+  "2026-11-10": true,
+  "2026-11-11": true,
+  "2026-11-12": false
+ },
+ "tracks": [
+  [
+   "Meetup",
+   177
+  ],
+  [
+   "Masterclasses",
+   69
+  ],
+  [
+   "Policy Summit",
+   49
+  ],
+  [
+   "AI Summit",
+   40
+  ],
+  [
+   "Centre Stage",
+   38
+  ],
+  [
+   "Developer Summit",
+   37
+  ],
+  [
+   "Marketing Summit",
+   34
+  ],
+  [
+   "Growth Summit",
+   32
+  ],
+  [
+   "MoneyConf",
+   27
+  ],
+  [
+   "Corporate Innovation Summit",
+   26
+  ],
+  [
+   "Night Summit",
+   24
+  ],
+  [
+   "Future of Work Summit",
+   22
+  ],
+  [
+   "Venture Summit",
+   22
+  ],
+  [
+   "Creative Summit",
+   21
+  ],
+  [
+   "(sem trilha)",
+   13
+  ],
+  [
+   "Cybersecurity Summit",
+   13
+  ],
+  [
+   "SaaS Summit",
+   9
+  ],
+  [
+   "Sport Summit",
+   9
+  ],
+  [
+   "Energy Summit",
+   8
+  ],
+  [
+   "Commerce Summit",
+   7
+  ],
+  [
+   "New Media Summit",
+   6
+  ],
+  [
+   "Health Summit",
+   6
+  ],
+  [
+   "Startup Masterclass",
+   4
+  ],
+  [
+   "Investor Masterclass",
+   2
+  ],
+  [
+   "Press Conference",
+   2
+  ],
+  [
+   "Women in tech",
+   1
+  ]
+ ],
+ "locations": [
+  [
+   "Stage 11",
+   49
+  ],
+  [
+   "Stage 8",
+   40
+  ],
+  [
+   "Stage 13",
+   40
+  ],
+  [
+   "Centre Stage",
+   38
+  ],
+  [
+   "Stage 5",
+   37
+  ],
+  [
+   "Stage 7",
+   35
+  ],
+  [
+   "Stage 14",
+   34
+  ],
+  [
+   "Stage 9",
+   32
+  ],
+  [
+   "Stage 10",
+   31
+  ],
+  [
+   "Stage 4",
+   29
+  ],
+  [
+   "Stage 3",
+   27
+  ],
+  [
+   "Meetup 1",
+   26
+  ],
+  [
+   "Meetup 6",
+   23
+  ],
+  [
+   "Meetup 2",
+   21
+  ],
+  [
+   "Meetup 3",
+   19
+  ]
+ ],
+ "hours": {
+  "2026-11-09": {
+   "18": 1,
+   "20": 1
+  },
+  "2026-11-10": {
+   "8": 1,
+   "10": 26,
+   "11": 38,
+   "12": 28,
+   "13": 21,
+   "14": 38,
+   "15": 42,
+   "16": 25,
+   "17": 8,
+   "18": 6,
+   "19": 4,
+   "20": 2,
+   "21": 2
+  },
+  "2026-11-11": {
+   "10": 32,
+   "11": 49,
+   "12": 32,
+   "13": 23,
+   "14": 42,
+   "15": 39,
+   "16": 28,
+   "17": 3,
+   "18": 5,
+   "19": 2,
+   "20": 2,
+   "21": 2
+  },
+  "2026-11-12": {
+   "10": 27,
+   "11": 41,
+   "12": 26,
+   "13": 24,
+   "14": 33,
+   "15": 32,
+   "16": 13
+  }
+ },
+ "top_companies": [
+  [
+   "Financial Times",
+   6
+  ],
+  [
+   "Intel",
+   5
+  ],
+  [
+   "Web Summit",
+   4
+  ],
+  [
+   "U-Experten",
+   4
+  ],
+  [
+   "PitchBook",
+   3
+  ],
+  [
+   "CNN",
+   3
+  ],
+  [
+   "Bloomberg",
+   3
+  ],
+  [
+   "The Wall Street Journal",
+   3
+  ],
+  [
+   "IBM",
+   3
+  ],
+  [
+   "Qualcomm",
+   3
+  ],
+  [
+   "Rádio Renascença",
+   3
+  ],
+  [
+   "BBC",
+   3
+  ],
+  [
+   "Axios",
+   3
+  ],
+  [
+   "ECO",
+   3
+  ],
+  [
+   "Grupo Renascença  Multimédia",
+   3
+  ],
+  [
+   "Wired",
+   2
+  ],
+  [
+   "The European Parliament",
+   2
+  ],
+  [
+   "Enfuce",
+   2
+  ],
+  [
+   "Particle 6",
+   2
+  ],
+  [
+   "CGTN Europe",
+   2
+  ]
+ ],
+ "unique_speakers_total": 841,
+ "unique_sessions_total": 698,
+ "multi_session_speakers": 155,
+ "meetup_sessions": 177,
+ "empty_track_sessions": 13,
+ "captured_at": "2026-10-27"
+};
+
+/* ---------- helpers ---------- */
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function fmtDay(d) { return d.slice(8) + "/11"; }
+
+/* ---------- tiles ---------- */
+const t = DATA.per_day["2026-11-10"], t11 = DATA.per_day["2026-11-11"], t12 = DATA.per_day["2026-11-12"];
+const tiles = [
+  [DATA.unique_sessions_total, "sessões únicas"],
+  [DATA.unique_speakers_total, "speakers únicos"],
+  [DATA.meetup_sessions, "sessões Meetup"],
+  [DATA.multi_session_speakers, "speakers em 2+ sessões"],
+  [t.unique_speakers + t11.unique_speakers, "speakers no dia 10+11"],
+  [DATA.empty_track_sessions, "sessões sem trilha"],
+];
+document.getElementById("tiles").innerHTML = tiles.map(([v, l]) =>
+  `<div class="tile"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
+
+/* ---------- horizontal bars ---------- */
+function hbars(containerId, rows, { highlight = null, unit = "" } = {}) {
+  const root = document.getElementById(containerId);
+  const max = Math.max(...rows.map(r => r[1]));
+  const labelW = Math.min(190, Math.max(...rows.map(r => r[0].length)) * 6.2 + 10);
+  const rowH = 24, top = 6, w = 900;
+  const svg = el("svg", { viewBox: `0 0 ${w} ${top + rows.length * rowH + 6}` }, null);
+  rows.forEach((r, i) => {
+    const [name, n] = r, y = top + i * rowH;
+    const isHi = highlight && name === highlight;
+    const bw = (w - labelW - 60) * n / max;
+    const g = el("g", {}, svg);
+    const label = el("text", { x: labelW - 8, y: y + 15, "text-anchor": "end" }, g);
+    label.textContent = name;
+    if (isHi) label.style.fontWeight = "600", label.style.fill = "var(--accent)";
+    const bar = el("rect", { x: labelW, y: y + 3, width: Math.max(bw, 1), height: rowH - 10,
+      rx: 3, fill: isHi ? "var(--accent)" : "var(--bar)", opacity: isHi ? 1 : 0.75 }, g);
+    const t2 = el("title", {}, bar);
+    t2.textContent = `${name}: ${n}${unit}`;
+    const val = el("text", { x: labelW + Math.max(bw, 1) + 7, y: y + 15, class: "val" }, g);
+    val.textContent = n;
+  });
+  root.appendChild(svg);
+}
+
+/* sessões por dia — destacando truncados */
+(function () {
+  const root = document.getElementById("by-day");
+  const rows = Object.entries(DATA.per_day).map(([d, v]) => [fmtDay(d), v.sessions]);
+  const trunc = { "10/11": DATA.nb_pages["2026-11-10"] > 32, "11/11": DATA.nb_pages["2026-11-11"] > 32 };
+  const max = Math.max(...rows.map(r => r[1]));
+  const w = 900, colW = w / rows.length, barW = 120;
+  const svg = el("svg", { viewBox: `0 0 ${w} 190` }, null);
+  rows.forEach((r, i) => {
+    const [name, n] = r, x = i * colW + (colW - barW) / 2;
+    const bh = (n / max) * 130, y = 150 - bh;
+    const isTrunc = trunc[name];
+    const bar = el("rect", { x, y, width: barW, height: Math.max(bh, 2), rx: 4,
+      fill: isTrunc ? "var(--bar)" : "var(--accent)", opacity: isTrunc ? 0.65 : 1 }, svg);
+    el("title", {}, bar).textContent = `${n} sessões (dia ${name})${isTrunc ? " — truncado" : ""}`;
+    const val = el("text", { x: x + barW / 2, y: y - 6, "text-anchor": "middle", class: "val" }, svg);
+    val.textContent = n + (isTrunc ? " *" : "");
+    const lab = el("text", { x: x + barW / 2, y: 172, "text-anchor": "middle" }, svg);
+    lab.textContent = name;
+  });
+  root.appendChild(svg);
+  const d = document.createElement("div");
+  d.className = "warn";
+  d.textContent = "* dia completado por subdivisão por trilha (10/11: API reporta 35 páginas · 11/11: 38). 09/11 ainda sem agenda publicada pelo evento — re-coletar perto do evento.";
+  root.appendChild(d);
+})();
+
+hbars("by-track", DATA.tracks.slice(0, 12), { highlight: "Meetup" });
+hbars("by-stage", DATA.locations.slice(0, 10));
+hbars("by-company", DATA.top_companies.slice(0, 12));
+
+/* ---------- heatmap dia × hora ---------- */
+(function () {
+  const root = document.getElementById("heat");
+  const days = Object.keys(DATA.hours);
+  const hours = [...new Set(days.flatMap(d => Object.keys(DATA.hours[d]).map(Number)))].sort((a, b) => a - b);
+  const max = Math.max(...days.flatMap(d => Object.values(DATA.hours[d])));
+  const shades = ["", "var(--heat-1)", "var(--heat-2)", "var(--heat-3)", "var(--heat-4)", "var(--heat-5)"];
+  const cell = 52, gap = 5, labelW = 40, top = 22;
+  const w = labelW + hours.length * (cell + gap) + 10;
+  const h = top + days.length * (cell * 0.62 + gap) + 40;
+  const svg = el("svg", { viewBox: `0 0 ${w} ${h}` }, null);
+  hours.forEach((hr, j) => {
+    const lab = el("text", { x: labelW + j * (cell + gap) + cell / 2, y: 13, "text-anchor": "middle" }, svg);
+    lab.textContent = String(hr).padStart(2, "0") + "h";
+  });
+  days.forEach((d, i) => {
+    const y = top + i * (cell * 0.62 + gap);
+    const lab = el("text", { x: labelW - 8, y: y + cell * 0.42, "text-anchor": "end" }, svg);
+    lab.textContent = fmtDay(d);
+    hours.forEach((hr, j) => {
+      const n = DATA.hours[d][hr] || 0;
+      const lvl = n === 0 ? 0 : Math.min(5, Math.ceil(n / max * 5));
+      const cellW = (cell + gap), x = labelW + j * cellW;
+      const rect = el("rect", { x, y, width: cell, height: cell * 0.62, rx: 4,
+        fill: n === 0 ? "var(--heat-empty)" : shades[lvl] }, svg);
+      el("title", {}, rect).textContent = `${fmtDay(d)} ${String(hr).padStart(2, "0")}h: ${n} sessões`;
+      if (n > 0) {
+        const txt = el("text", { x: x + cell / 2, y: y + cell * 0.42, "text-anchor": "middle" }, svg);
+        txt.style.fill = lvl >= 4 ? "var(--card)" : "var(--ink)";
+        txt.textContent = n;
+      }
+    });
+  });
+  const lg = document.createElement("div");
+  lg.className = "legend";
+  lg.innerHTML = `<span><i style="background:var(--heat-empty)"></i>0</span>` +
+    [1, 2, 3, 4, 5].map(l => `<span><i style="background:${shades[l]}"></i>${["", "1–8", "9–17", "18–25", "26–34", "35+"][l]}</span>`).join("");
+  root.appendChild(svg);
+  root.appendChild(lg);
+})();
+</script>
+</body>
+</html>
