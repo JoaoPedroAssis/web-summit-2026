@@ -96,6 +96,23 @@ GANCHOS = {
     "contratacao": "Times/vagas: a pessoa ou a empresa dela contrata — falar de times, mercado e oportunidades",
 }
 
+# Backstop determinístico do gating: a Jev deixou passar imprensa no
+# sample (editor da Fortune, prob 0.84) e no run full (âncora da CNN,
+# prob 0.94). Cargo/veículo de imprensa sai do escopo por regra, sem
+# depender do julgamento do modelo.
+IMPRENSA_CARGO_RE = re.compile(
+    r"\b(anchor|editor|journalist|reporter|correspondent|presenter|"
+    r"columnist|broadcaster|newsreader|moderator|media spokes|"
+    r"podcast host|radio host|tv host)\b", re.I)
+# veículos de imprensa — regex com fronteira de palavra para não pegar
+# substring (ex.: "eco" dentro de "SpaceComputer")
+IMPRENSA_VEICULO_RE = re.compile(
+    r"\b(cnn|bbc|bloomberg|wired|forbes|financial times|guardian|"
+    r"sky news|reuters|new york times|wall street journal|axios|politico|"
+    r"euronews|al jazeera|investopedia|business insider|fortune|"
+    r"economist|cgtn|renascen[cç]a|pplware|press|news|media|jornal|"
+    r"not[íi]cias|eco)\b", re.I)
+
 
 def http_post_json(url, payload, api_key):
     req = urllib.request.Request(
@@ -297,6 +314,17 @@ def agregar(base, cache, config):
             no_escopo = False
         else:
             no_escopo = alvo < 0.5
+        # backstop determinístico de imprensa (ver constante acima);
+        # braços de investimento de grupos de mídia (ex.: Thomson Reuters
+        # Ventures) não são redação — ficam de fora da regra de veículo
+        empresa = p["company_name"] or ""
+        braço_invest = re.search(
+            r"\b(ventures|capital|invest|partners)\b", empresa, re.I)
+        imprensa = bool(IMPRENSA_CARGO_RE.search(p["job_title"] or "")) or (
+            not braço_invest
+            and bool(IMPRENSA_VEICULO_RE.search(empresa)))
+        if imprensa:
+            no_escopo = True
         avaliado = prioridade is not None
         ranqueados.append({
             "attendance_id": p["attendance_id"],
@@ -313,6 +341,7 @@ def agregar(base, cache, config):
             "tipo": tipo_r.get("choice"),
             "tipo_confidence": tipo_r.get("confidence"),
             "no_escopo": no_escopo,
+            "gating_imprensa": imprensa,
             "prob_alvo_valido": alvo,
             "avaliado": avaliado,
             "gancho": (a.get("gancho") or {}).get("choice"),

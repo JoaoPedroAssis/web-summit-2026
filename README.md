@@ -15,6 +15,7 @@ mensagem para revisar antes de enviar.
 | 3 | `python3 fetch_profiles.py` | Baixa bios públicas dos speakers (`__NEXT_DATA__` das páginas de attendee) → `data/raw/profiles/` |
 | 4 | `python3 triage.py` | Classifica cada pessoa com a Jev (TypeSafe System One): **tipo** (par / referencia / porta / contexto), **prioridade** 0–4, **gancho** de abordagem e gating `alvo_valido`. Cache incremental em `data/triage_cache.json` → `data/ranking.json`, `data/ranking.csv` |
 | 5 | `python3 roteiro.py` | Gera `data/roteiro.md` (plano por dia, conflitos de horário, meetups) e `data/dossie.md` (top N com rascunho de mensagem em inglês) |
+| 6 | `python3 gera_relatorio.py` | Gera `data/relatorio.html` — relatório completo autossuficiente: as 4 listas com rascunhos, roteiro por dia, analytics da run e metodologia |
 
 `dashboard.html` é um visualizador offline dos agregados de coleta
 (`data/analysis.json`, gerado pelo `fetch.py`).
