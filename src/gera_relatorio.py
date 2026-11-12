@@ -607,6 +607,13 @@ details th, details td { border: 1px solid var(--grid); padding: .2rem .5rem;
 .metodo li { margin-bottom: .35rem; }
 .custo { font-size: .9rem; color: var(--ink2); }
 footer { margin-top: 3rem; color: var(--muted); font-size: .78rem; }
+@media print {
+  .pessoa, .kpi, .toc, blockquote, .sessoes li, details table { break-inside: avoid; }
+  h2, h3, h4 { break-after: avoid; }
+  details summary { display: block; }
+  details > *:not(summary) { display: block; }
+  a { color: inherit; text-decoration: none; }
+}
 """
 
 

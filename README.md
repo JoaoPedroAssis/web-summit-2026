@@ -10,16 +10,27 @@ mensagem para revisar antes de enviar.
 
 | Passo | Script | O que faz |
 |---|---|---|
-| 1 | `python3 fetch.py` | Baixa a programação da API pública (`/api/list-items/`), subdividindo por trilha quando o dia bate no teto de 224 sessões → `data/raw/schedule/` |
-| 2 | `python3 consolidate.py` | Deduplica participações e agrega por pessoa → `data/people.json`, `data/sessions.json` |
-| 3 | `python3 fetch_profiles.py` | Baixa bios públicas dos speakers (`__NEXT_DATA__` das páginas de attendee) → `data/raw/profiles/` |
-| 4 | `python3 triage.py` | Classifica cada pessoa com a Jev (TypeSafe System One): **tipo** (par / referencia / porta / contexto), **prioridade** 0–4, **gancho** de abordagem e gating `alvo_valido`. Cache incremental em `data/triage_cache.json` → `data/ranking.json`, `data/ranking.csv` |
-| 5 | `python3 roteiro.py` | Gera `data/roteiro.md` (plano por dia, conflitos de horário, meetups) e `data/dossie.md` (top N com rascunho de mensagem em inglês) |
-| 6 | `python3 gera_relatorio.py` | Gera `data/relatorio.html` — relatório completo autossuficiente: as 4 listas com rascunhos, roteiro por dia, analytics da run e metodologia |
-| — | `python3 services_software.py` | Pipeline temático independente: cruza o evento com a tese **Services as Software / AI-Native Services** (Sequoia + Emergence) — scan determinístico + Jev → `data/services_software.html` |
+| 1 | `python3 src/fetch.py` | Baixa a programação da API pública (`/api/list-items/`), subdividindo por trilha quando o dia bate no teto de 224 sessões → `data/raw/schedule/` |
+| 2 | `python3 src/consolidate.py` | Deduplica participações e agrega por pessoa → `data/people.json`, `data/sessions.json` |
+| 3 | `python3 src/fetch_profiles.py` | Baixa bios públicas dos speakers (`__NEXT_DATA__` das páginas de attendee) → `data/raw/profiles/` |
+| 4 | `python3 src/triage.py` | Classifica cada pessoa com a Jev (TypeSafe System One): **tipo** (par / referencia / porta / contexto), **prioridade** 0–4, **gancho** de abordagem e gating `alvo_valido`. Cache incremental em `data/triage_cache.json` → `data/ranking.json`, `data/ranking.csv` |
+| 5 | `python3 src/roteiro.py` | Gera `data/roteiro.md` (plano por dia, conflitos de horário, meetups) e `data/dossie.md` (top N com rascunho de mensagem em inglês) |
+| 6 | `python3 src/gera_relatorio.py` | Gera `data/relatorio.html` — relatório completo autossuficiente: as 4 listas com rascunhos, roteiro por dia, analytics da run e metodologia |
+| — | `python3 src/gera_dia12_md.py` | Gera `docs/dia12_programacao.md`: programação completa do dia 12 após o cancelamento do dia 11 (tempestade Charles), com status remanejada/nova/já estava |
+| — | `python3 src/services_software.py` | Pipeline temático independente: cruza o evento com a tese **Services as Software / AI-Native Services** (Sequoia + Emergence) — scan determinístico + Jev → `data/services_software.html` |
 
-`dashboard.html` é um visualizador offline dos agregados de coleta
+`docs/dashboard.html` é um visualizador offline dos agregados de coleta
 (`data/analysis.json`, gerado pelo `fetch.py`).
+
+## Estrutura
+
+```
+src/      scripts do pipeline (rodar sempre da raiz: python3 src/<script>.py)
+docs/     Handoff, cartão de contato, dashboard e dia12_programacao.md (versionado)
+backup/   versões anteriores e o raw do dia 12 pré-remanejamento
+data/     saídas e raw (ignorado pelo git)
+perfil.md configuração/perfil usado na triagem
+```
 
 ## Configuração
 
@@ -32,10 +43,10 @@ mensagem para revisar antes de enviar.
 ## Flags úteis do triage.py
 
 ```
-python3 triage.py --limit 10     # teste de sanidade com 10 pessoas
-python3 triage.py --amostra 30   # amostra estratificada
-python3 triage.py --refazer      # descarta o cache e refaz tudo
-python3 triage.py --agregar      # só re-agrega o ranking (não consome API)
+python3 src/triage.py --limit 10     # teste de sanidade com 10 pessoas
+python3 src/triage.py --amostra 30   # amostra estratificada
+python3 src/triage.py --refazer      # descarta o cache e refaz tudo
+python3 src/triage.py --agregar      # só re-agrega o ranking (não consome API)
 ```
 
 ## Decisões de design
