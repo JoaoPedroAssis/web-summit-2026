@@ -1,0 +1,13 @@
+{
+  "date": "2026-11-12",
+  "unique_sessions": 196,
+  "results": {
+    "unfiltered": {
+      "query": "unfiltered",
+      "captured": 196,
+      "nb_pages": 28,
+      "truncated": false
+    },
+    "tracks": {}
+  }
+}
